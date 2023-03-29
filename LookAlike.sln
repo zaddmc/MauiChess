@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33122.133
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LookAlike", "LookAlike\LookAlike.csproj", "{8241754F-0F4D-48FB-8624-598EAF8EA70B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReplicaOfAsbjorn", "ConsoleApp1\ReplicaOfAsbjorn.csproj", "{C9421557-522F-465B-9D86-DD1459322675}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8241754F-0F4D-48FB-8624-598EAF8EA70B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8241754F-0F4D-48FB-8624-598EAF8EA70B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8241754F-0F4D-48FB-8624-598EAF8EA70B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8241754F-0F4D-48FB-8624-598EAF8EA70B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9421557-522F-465B-9D86-DD1459322675}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9421557-522F-465B-9D86-DD1459322675}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9421557-522F-465B-9D86-DD1459322675}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9421557-522F-465B-9D86-DD1459322675}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DFA2BF4E-2D59-4215-9851-A6E9C640154C}
+	EndGlobalSection
+EndGlobal
