@@ -23,9 +23,9 @@ namespace yestester
         {
             Console.CursorVisible = false;
 
-            positionType = new TileType.Types[widthX][];
+            positionType = new TileType.Types[widthX + 1][];
             for (int i = 0; i < positionType.Length; i++)
-                positionType[i] = new TileType.Types[heightY];
+                positionType[i] = new TileType.Types[heightY + 1];
 
             MakeBoard();
 
@@ -38,7 +38,6 @@ namespace yestester
             {
                 MovementAction();
 
-
             }
 
 
@@ -47,7 +46,7 @@ namespace yestester
         } // Main
         static void MovementAction()
         {
-
+            bool didItMove = false;
             ConsoleKeyInfo keyAction = Console.ReadKey(true);
 
             Console.SetCursorPosition(Xplayer, Yplayer);
@@ -56,34 +55,34 @@ namespace yestester
             switch (keyAction.Key)
             {
                 case ConsoleKey.W or ConsoleKey.UpArrow:
-                    if (Yplayer > 1)
+                    if (positionType[Xplayer][Yplayer - 1] != TileType.Types.wall)
                     {
                         Yplayer--;
-                        tilesWalked++;
+                        didItMove = true;
                     }
                     break;
 
                 case ConsoleKey.A or ConsoleKey.LeftArrow:
-                    if (Xplayer > 1)
+                    if (positionType[Xplayer - 1][Yplayer] != TileType.Types.wall)
                     {
                         Xplayer--;
-                        tilesWalked++;
+                        didItMove = true;
                     }
                     break;
 
                 case ConsoleKey.S or ConsoleKey.DownArrow:
-                    if (Yplayer < heightY - 1)
+                    if (positionType[Xplayer][Yplayer + 1] != TileType.Types.wall)
                     {
                         Yplayer++;
-                        tilesWalked++;
+                        didItMove = true;
                     }
                     break;
 
                 case ConsoleKey.D or ConsoleKey.RightArrow:
-                    if (Xplayer < widthX - 1)
+                    if (positionType[Xplayer + 1][Yplayer] != TileType.Types.wall)
                     {
                         Xplayer++;
-                        tilesWalked++;
+                        didItMove = true;
                     }
                     break;
 
@@ -110,8 +109,13 @@ namespace yestester
             }
             Console.SetCursorPosition(Xplayer, Yplayer);
             Console.Write('@');
-            TileChecker();
-            positionType[Xplayer][Yplayer] = TileType.Types.explored;
+            if (didItMove)
+            {
+                TileChecker();
+                positionType[Xplayer][Yplayer] = TileType.Types.explored;
+                tilesWalked++;
+
+            }
 
             // info and stats
             Console.SetCursorPosition(widthX + 1, 0);
@@ -241,31 +245,40 @@ namespace yestester
             Console.Write('╝');
 
         } // MakeBoard
-        public static (string Name, char Logo, int Int) GetTileTypeInfo(TileType.Types theTile)
+        public static (string Name, char Logo, int Int, ConsoleColor color) GetTileTypeInfo(TileType.Types theTile)
         {
             switch (theTile)
             {
                 case TileType.Types.wall:
-                    return ("wall", 'w', 10);
+                    return ("wall", 'w', 10, ConsoleColor.White);
 
                 case TileType.Types.unexplored:
-                    return ("une", '.', 20);
+                    return ("une", '.', 20, ConsoleColor.DarkGreen);
 
                 case TileType.Types.explored:
-                    return ("exp", '+', 30);
+                    return ("exp", '+', 30, ConsoleColor.Green);
 
                 case TileType.Types.chest:
-                    return ("chest", 'c', 40);
+                    return ("chest", 'c', 40, ConsoleColor.Yellow);
 
                 case TileType.Types.bandits:
-                    return ("band", 'b', 50);
+                    return ("band", 'b', 50, ConsoleColor.Magenta);
 
                 case TileType.Types.boss:
-                    return ("boss", 'b', 100);
+                    return ("boss", 'b', 100, ConsoleColor.Red);
 
                 default:
-                    return ("null", '?', 0);
+                    return ("null", '?', 0, ConsoleColor.DarkRed);
             }
+        } // GetTileTypeInfo
+        public static void PlaceHere(int xPos, int yPos, TileType.Types theType)
+        {
+            var tile = GetTileTypeInfo(theType);
+            Console.SetCursorPosition(xPos, yPos);
+            Console.ForegroundColor = tile.color;
+            Console.Write(tile.Logo);
+
+
         }
     } // Program
     internal class Position

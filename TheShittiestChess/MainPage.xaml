@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TheShittiestChess.MainPage">
+    <Grid
+        ColumnDefinitions="4*,8*,4*"
+        >
+        <Grid
+            Grid.Column="1"
+            RowDefinitions="*,*,*,*,*,*,*,*"
+            ColumnDefinitions="*,*,*,*,*,*,*,*"
+            x:Name="Board"
+            >
+            
+            <!--
+        <CollectionView
+            Grid.Column="1"
+            x:Name="BoardPieces"
+            SelectionMode="Single"
+            SelectionChanged="BoardPieces_SelectionChanged"
+            >
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <ImageButton
+                        Source="{Binding imageSource}"
+                        ZIndex="10"
+                        />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    -->
+        </Grid>
+        <Grid
+            Grid.Column="1"
+            RowDefinitions="*,*,*,*,*,*,*,*"
+            ColumnDefinitions="*,*,*,*,*,*,*,*"
+            x:Name="HighLightBoard"
+            >
+
+            
+        </Grid>
+    </Grid>
+</ContentPage>
