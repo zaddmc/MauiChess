@@ -9,7 +9,7 @@
             Grid.Column="1"
             RowDefinitions="*,*,*,*,*,*,*,*"
             ColumnDefinitions="*,*,*,*,*,*,*,*"
-            x:Name="Board"
+            x:Name="board"
             >
             
             <!--

@@ -7,12 +7,12 @@ namespace TheShittiestChess
         public static ChessPiece[] chessPieceche = new ChessPiece[32];
         public static Dictionary<string, ChessPiece> piecePostions = new Dictionary<string, ChessPiece>();
         public static ImageButton[] imageButtons = new ImageButton[32];
-        public static Grid board { get; private set; }
+        public static Grid Board { get; private set; }
         public static Grid HighLight { get; private set; }
         public MainPage()
         {
             InitializeComponent();
-            board = Board;
+            Board = board;
             HighLight = HighLightBoard;
             MakeBoard(Board);
             InitPieces();
@@ -57,6 +57,8 @@ namespace TheShittiestChess
             var button = sender as ImageButton;
             int identifier = int.Parse(button.ClassId);
 
+            Movement.ClearRemoveLater();
+
             // to determine what it is to do
             switch (chessPieceche[identifier].pieceType)
             {
@@ -64,14 +66,19 @@ namespace TheShittiestChess
                     Movement.KingMover(chessPieceche[identifier]);
                     break;
                 case ChessPiece.PieceTypes.queen:
+                    Movement.QueenMover(chessPieceche[identifier]);
                     break;
                 case ChessPiece.PieceTypes.rook:
+                    Movement.RookMover(chessPieceche[identifier]);
                     break;
                 case ChessPiece.PieceTypes.bishop:
+                    Movement.BishopMover(chessPieceche[identifier]);
                     break;
                 case ChessPiece.PieceTypes.knight:
+                    Movement.KnightMover(chessPieceche[identifier]);
                     break;
                 case ChessPiece.PieceTypes.pawn:
+                    Movement.PawnMover(chessPieceche[identifier]);
                     break;
                 default:
                     break;
