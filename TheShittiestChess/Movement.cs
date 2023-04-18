@@ -121,7 +121,13 @@ namespace TheShittiestChess
             ChessPiece thePiece = MainPage.piecePostions[passedOn[0]];
             Position newPosition = new Position(passedOn[1][2] - 48, passedOn[1][7] - 48);
 
-            TakePiece(newPosition, thePiece);
+            if (passedOn.Length == 3) // en passant moment
+            {
+                Position enPassant = new Position(passedOn[2][2] - 48, passedOn[2][7] - 48);
+                TakePiece(newPosition, thePiece, enPassant);
+            }
+            else // the standerd to take
+                TakePiece(newPosition, thePiece);
 
 
             ClearRemoveLater();
@@ -402,6 +408,24 @@ namespace TheShittiestChess
             if (IsPieceTakeable(tempPos4, thePiece.isWhite))
                 pawnPostions.Add(tempPos4);
 
+            // an attempt at making en passant
+            if (thePiece.isWhite && thePiece.position.x == 5 || !thePiece.isWhite && thePiece.position.x == 4)
+            {
+
+                // en passant check on the right side
+                Position tempEnpassant1 = new Position(thePiece.position.x + 1 * polarrization, thePiece.position.y + 1 * polarrization);
+                Position tempEnpassant2 = new Position(thePiece.position.x + 1 * polarrization, thePiece.position.y);
+                if (IsPieceTakeable(tempEnpassant2, thePiece.isWhite) && !IsPostitionOccupied(tempEnpassant1))
+                    CheckSurroundings(thePiece, tempEnpassant2, tempEnpassant1);
+
+                // en passant check on the left side
+                Position tempEnpassant3 = new Position(thePiece.position.x - 1 * polarrization, thePiece.position.y + 1 * polarrization);
+                Position tempEnpassant4 = new Position(thePiece.position.x - 1 * polarrization, thePiece.position.y);
+                if (IsPieceTakeable(tempEnpassant4, thePiece.isWhite) && !IsPostitionOccupied(tempEnpassant3))
+                    CheckSurroundings(thePiece, tempEnpassant4, tempEnpassant3);
+            }
+
+
 
             // checking the possible postions
             for (int i = 0; i < pawnPostions.Count; i++)
@@ -409,7 +433,61 @@ namespace TheShittiestChess
                 CheckSurroundings(thePiece, pawnPostions[i]);
             }
         } // PawnMover
+        private static void CheckSurroundings(ChessPiece thePiece, Position positionToCheck, Position enPassant)
+        {
+            if (positionToCheck.x >= 0 && positionToCheck.x <= 7 && positionToCheck.y >= 0 && positionToCheck.y <= 7)
+            {
+                string passOn = string.Format(MainPage.PositionToString(thePiece.position) + "|" + MainPage.PositionToString(positionToCheck) + "|" + MainPage.PositionToString(enPassant));
+                Button button = new Button
+                {
+                    Opacity = 0,
+                    ZIndex = 30,
+                    ClassId = passOn,
 
+                };
+                Button button2 = new Button
+                {
+                    Opacity = 0,
+                    ZIndex = 30,
+                    ClassId = passOn,
+
+                };
+                Button border = new Button
+                {
+                    BorderColor = Colors.Red,
+                    BorderWidth = 5,
+                    ZIndex = 15,
+                };
+                MainPage.Board.Children.Add(border);
+                Grid.SetColumn(border, enPassant.x);
+                Grid.SetRow(border, enPassant.y);
+                removeLater.Add(border);
+
+                MainPage.Board.Children.Add(button);
+                Grid.SetColumn(button, enPassant.x);
+                Grid.SetRow(button, enPassant.y);
+                removeLater.Add(button);
+
+                MainPage.Board.Children.Add(button2);
+                Grid.SetColumn(button2, positionToCheck.x);
+                Grid.SetRow(button2, positionToCheck.y);
+                removeLater.Add(button2);
+
+                button.Clicked += TakePiece_Clicked;
+                button2.Clicked += TakePiece_Clicked;
+            }
+        } // CheckSurroundings
+        private static void TakePiece(Position enemyPosition, ChessPiece pieceTryingToTake, Position enPassant)
+        {
+            // "killing" the enemy piece
+            MainPage.piecePostions[MainPage.PositionToString(enemyPosition)].isAlive = false;
+            MainPage.Board.Remove(MainPage.imageButtons[MainPage.piecePostions[MainPage.PositionToString(enemyPosition)].index]);
+
+            MainPage.piecePostions.Remove(MainPage.PositionToString(enemyPosition));
+
+
+            MovePiece(pieceTryingToTake.position, enPassant);
+        } // TakePiece
 
     }
 }
