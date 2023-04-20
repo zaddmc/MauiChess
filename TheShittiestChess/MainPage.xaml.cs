@@ -1,19 +1,21 @@
-﻿using System.Diagnostics;
-
-namespace TheShittiestChess
+﻿namespace TheShittiestChess
 {
     public partial class MainPage : ContentPage
     {
         public static ChessPiece[] chessPieceche = new ChessPiece[32];
         public static Dictionary<string, ChessPiece> piecePostions = new Dictionary<string, ChessPiece>();
         public static ImageButton[] imageButtons = new ImageButton[32];
+        public static int currentRound = 0;
         public static Grid Board { get; private set; }
         public static Grid HighLight { get; private set; }
+        public static Label ColorBox { get; private set; }
         public MainPage()
         {
             InitializeComponent();
             Board = board;
             HighLight = HighLightBoard;
+            ColorBox = colorBox;
+
             MakeBoard(Board);
             InitPieces();
             MakePieces(Board);
@@ -59,38 +61,55 @@ namespace TheShittiestChess
 
             Movement.ClearRemoveLater();
 
-            // to determine what it is to do
-            switch (chessPieceche[identifier].pieceType)
-            {
-                case ChessPiece.PieceTypes.king:
-                    Movement.KingMover(chessPieceche[identifier]);
-                    break;
-                case ChessPiece.PieceTypes.queen:
-                    Movement.QueenMover(chessPieceche[identifier]);
-                    break;
-                case ChessPiece.PieceTypes.rook:
-                    Movement.RookMover(chessPieceche[identifier]);
-                    break;
-                case ChessPiece.PieceTypes.bishop:
-                    Movement.BishopMover(chessPieceche[identifier]);
-                    break;
-                case ChessPiece.PieceTypes.knight:
-                    Movement.KnightMover(chessPieceche[identifier]);
-                    break;
-                case ChessPiece.PieceTypes.pawn:
-                    Movement.PawnMover(chessPieceche[identifier]);
-                    break;
-                default:
-                    break;
-            }
+            if (chessPieceche[identifier].isWhite == TurnBox(false) || false) // the second part is for debug use only, it should be false in actual gameplay
+                switch (chessPieceche[identifier].pieceType) // this switch checks which piece movement type that is necessary
+                {
+                    case ChessPiece.PieceTypes.king:
+                        Movement.KingMover(chessPieceche[identifier]);
+                        break;
+                    case ChessPiece.PieceTypes.queen:
+                        Movement.QueenMover(chessPieceche[identifier]);
+                        break;
+                    case ChessPiece.PieceTypes.rook:
+                        Movement.RookMover(chessPieceche[identifier]);
+                        break;
+                    case ChessPiece.PieceTypes.bishop:
+                        Movement.BishopMover(chessPieceche[identifier]);
+                        break;
+                    case ChessPiece.PieceTypes.knight:
+                        Movement.KnightMover(chessPieceche[identifier]);
+                        break;
+                    case ChessPiece.PieceTypes.pawn:
+                        Movement.PawnMover(chessPieceche[identifier]);
+                        break;
+                    default:
+                        break;
+                }
 
 
 
-
-            // debuggin and testing
-            Debug.WriteLine(chessPieceche[identifier].pieceType.ToString());
         }
+        public static bool TurnBox(bool isChange)
+        {
+            bool isItWhite = false;
+            if (currentRound % 2 == 0)
+                isItWhite = true;
+            if (isChange)
+                if (isItWhite)
+                {
+                    ColorBox.BackgroundColor = Colors.White;
+                    ColorBox.Text = "White's Turn";
+                    ColorBox.TextColor = Colors.Black;
+                }
+                else
+                {
+                    ColorBox.BackgroundColor = Colors.Black;
+                    ColorBox.Text = "Black's Turn";
+                    ColorBox.TextColor = Colors.White;
+                }
 
+            return isItWhite;
+        }
         public static void MakeBoard(Grid board)
         {
             for (int i = 0; i < 8; i++)
@@ -180,6 +199,7 @@ namespace TheShittiestChess
         public string imageSource { get; set; }
         public bool isAlive { get; set; }
         public int index { get; set; }
+        public int lastMoveRound { get; set; }
         public ChessPiece(PieceTypes pieceType, bool isWhite, string imageSource, bool isAlive, int index, Position position)
         {
             this.pieceType = pieceType;

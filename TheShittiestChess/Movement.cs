@@ -41,11 +41,20 @@ namespace TheShittiestChess
                 var thePiece = MainPage.piecePostions[MainPage.PositionToString(oldPostition)];
                 MainPage.chessPieceche[thePiece.index].position = newPostition;
 
+                // removes the old allocated postion in the dictionary and allocates the new position
                 MainPage.piecePostions.Remove(MainPage.PositionToString(oldPostition));
                 MainPage.piecePostions.Add(MainPage.PositionToString(newPostition), MainPage.chessPieceche[thePiece.index]);
 
+                // moves the given piece
                 Grid.SetColumn(MainPage.imageButtons[thePiece.index], newPostition.x);
                 Grid.SetRow(MainPage.imageButtons[thePiece.index], newPostition.y);
+
+                // the round counter goes up
+                MainPage.chessPieceche[thePiece.index].lastMoveRound = MainPage.currentRound;
+                MainPage.currentRound++;
+
+                // to change the box
+                MainPage.TurnBox(true);
             }
             else
             {
@@ -154,7 +163,6 @@ namespace TheShittiestChess
             Position newPosition = new Position(passedOn[1][2] - 48, passedOn[1][7] - 48);
 
             MovePiece(thePiece.position, newPosition);
-
             ClearRemoveLater();
 
             Debug.WriteLine("The piece Should have moved to a new position");
@@ -169,23 +177,34 @@ namespace TheShittiestChess
         } // ClearRemoveLater
         public static void KingMover(ChessPiece thePiece)
         {
-            //making a array of possible positions the king can move to
-            Position[] kingPostions =
-            {
-                new Position(thePiece.position.x - 1, thePiece.position.y + 1),
-                new Position(thePiece.position.x, thePiece.position.y + 1),
-                new Position(thePiece.position.x + 1, thePiece.position.y + 1),
-                new Position(thePiece.position.x + 1, thePiece.position.y),
-                new Position(thePiece.position.x + 1, thePiece.position.y - 1),
-                new Position(thePiece.position.x, thePiece.position.y - 1),
-                new Position(thePiece.position.x - 1, thePiece.position.y - 1),
-                new Position(thePiece.position.x - 1, thePiece.position.y),
-            };
+            // checking all the postions the king can move to by deafault
+            CheckSurroundings(thePiece, new Position(thePiece.position.x - 1, thePiece.position.y + 1));
+            CheckSurroundings(thePiece, new Position(thePiece.position.x, thePiece.position.y + 1));
+            CheckSurroundings(thePiece, new Position(thePiece.position.x + 1, thePiece.position.y + 1));
+            CheckSurroundings(thePiece, new Position(thePiece.position.x + 1, thePiece.position.y));
+            CheckSurroundings(thePiece, new Position(thePiece.position.x + 1, thePiece.position.y - 1));
+            CheckSurroundings(thePiece, new Position(thePiece.position.x, thePiece.position.y - 1));
+            CheckSurroundings(thePiece, new Position(thePiece.position.x - 1, thePiece.position.y - 1));
+            CheckSurroundings(thePiece, new Position(thePiece.position.x - 1, thePiece.position.y));
 
-            for (int i = 0; i < kingPostions.Length; i++)
+            // castling check
+            int polarrization = 1;
+            if (!thePiece.isWhite)
+                polarrization = -1;
+
+            if (thePiece.isWhite)
             {
-                CheckSurroundings(thePiece, kingPostions[i]);
+                Position castleLeft = new(thePiece.position.x, thePiece.position.y - 3);
+                if (IsPostitionOccupied(castleLeft))
+                {
+                    if (MainPage.piecePostions[MainPage.PositionToString(castleLeft)].lastMoveRound == 0)
+                    {
+                        MovePiece(castleLeft, new Position(thePiece.position.x, thePiece.position.y - 1));
+                    }
+                }
             }
+
+
         } // KingMover
         public static void QueenMover(ChessPiece thePiece)
         {
@@ -409,19 +428,18 @@ namespace TheShittiestChess
                 pawnPostions.Add(tempPos4);
 
             // an attempt at making en passant
-            if (thePiece.isWhite && thePiece.position.x == 5 || !thePiece.isWhite && thePiece.position.x == 4)
+            if (thePiece.isWhite && thePiece.position.y == 4 || !thePiece.isWhite && thePiece.position.y == 3)
             {
-
                 // en passant check on the right side
                 Position tempEnpassant1 = new Position(thePiece.position.x + 1 * polarrization, thePiece.position.y + 1 * polarrization);
                 Position tempEnpassant2 = new Position(thePiece.position.x + 1 * polarrization, thePiece.position.y);
-                if (IsPieceTakeable(tempEnpassant2, thePiece.isWhite) && !IsPostitionOccupied(tempEnpassant1))
+                if (IsPieceTakeable(tempEnpassant2, thePiece.isWhite) && !IsPostitionOccupied(tempEnpassant1) && MainPage.piecePostions[MainPage.PositionToString(tempEnpassant2)].lastMoveRound == MainPage.currentRound - 1)
                     CheckSurroundings(thePiece, tempEnpassant2, tempEnpassant1);
 
                 // en passant check on the left side
                 Position tempEnpassant3 = new Position(thePiece.position.x - 1 * polarrization, thePiece.position.y + 1 * polarrization);
                 Position tempEnpassant4 = new Position(thePiece.position.x - 1 * polarrization, thePiece.position.y);
-                if (IsPieceTakeable(tempEnpassant4, thePiece.isWhite) && !IsPostitionOccupied(tempEnpassant3))
+                if (IsPieceTakeable(tempEnpassant4, thePiece.isWhite) && !IsPostitionOccupied(tempEnpassant3) && MainPage.piecePostions[MainPage.PositionToString(tempEnpassant4)].lastMoveRound == MainPage.currentRound - 1)
                     CheckSurroundings(thePiece, tempEnpassant4, tempEnpassant3);
             }
 
