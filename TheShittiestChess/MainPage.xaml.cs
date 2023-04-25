@@ -61,7 +61,7 @@
 
             Movement.ClearRemoveLater();
 
-            if (chessPieceche[identifier].isWhite == TurnBox(false) || false) // the second part is for debug use only, it should be false in actual gameplay
+            if (chessPieceche[identifier].isWhite == TurnBox(false) || true) // the second part is for debug use only, it should be false in actual gameplay
                 switch (chessPieceche[identifier].pieceType) // this switch checks which piece movement type that is necessary
                 {
                     case ChessPiece.PieceTypes.king:
@@ -153,8 +153,8 @@
             }
 
             // white pieces
-            chessPieceche[0] = new ChessPiece(ChessPiece.PieceTypes.king, true, "kingw.png", true, 0, new Position(3, 0));
-            chessPieceche[1] = new ChessPiece(ChessPiece.PieceTypes.queen, true, "queenw.png", true, 1, new Position(4, 0));
+            chessPieceche[0] = new ChessPiece(ChessPiece.PieceTypes.king, true, "kingw.png", true, 0, new Position(4, 0));
+            chessPieceche[1] = new ChessPiece(ChessPiece.PieceTypes.queen, true, "queenw.png", true, 1, new Position(3, 0));
             chessPieceche[2] = new ChessPiece(ChessPiece.PieceTypes.bishop, true, "bishopw.png", true, 2, new Position(2, 0));
             chessPieceche[3] = new ChessPiece(ChessPiece.PieceTypes.bishop, true, "bishopw.png", true, 3, new Position(5, 0));
             chessPieceche[4] = new ChessPiece(ChessPiece.PieceTypes.knight, true, "knightw.png", true, 4, new Position(1, 0));
@@ -163,8 +163,8 @@
             chessPieceche[7] = new ChessPiece(ChessPiece.PieceTypes.rook, true, "rookw.png", true, 7, new Position(7, 0));
 
             // black pieces
-            chessPieceche[16] = new ChessPiece(ChessPiece.PieceTypes.king, false, "kingb.png", true, 16, new Position(3, 7));
-            chessPieceche[17] = new ChessPiece(ChessPiece.PieceTypes.queen, false, "queenb.png", true, 17, new Position(4, 7));
+            chessPieceche[16] = new ChessPiece(ChessPiece.PieceTypes.king, false, "kingb.png", true, 16, new Position(4, 7));
+            chessPieceche[17] = new ChessPiece(ChessPiece.PieceTypes.queen, false, "queenb.png", true, 17, new Position(3, 7));
             chessPieceche[18] = new ChessPiece(ChessPiece.PieceTypes.bishop, false, "bishopb.png", true, 18, new Position(2, 7));
             chessPieceche[19] = new ChessPiece(ChessPiece.PieceTypes.bishop, false, "bishopb.png", true, 19, new Position(5, 7));
             chessPieceche[20] = new ChessPiece(ChessPiece.PieceTypes.knight, false, "knightb.png", true, 20, new Position(1, 7));
@@ -219,6 +219,11 @@
             this.x = x;
             this.y = y;
         }
+        public string ToString()
+        {
+            return string.Format("x:{0}, y:{1}", x, y);
+        }
+
     }
 
 }

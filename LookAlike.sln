@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LookAlike", "LookAlike\Look
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReplicaOfAsbjorn", "ConsoleApp1\ReplicaOfAsbjorn.csproj", "{C9421557-522F-465B-9D86-DD1459322675}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheWorstChessEver", "TheWorstChessEver\TheWorstChessEver.csproj", "{29DD5A73-83FE-45C9-AEFF-B225A2F5C30C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheWorstChessEver", "TheWorstChessEver\TheWorstChessEver.csproj", "{29DD5A73-83FE-45C9-AEFF-B225A2F5C30C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheShittiestChess", "TheShittiestChess\TheShittiestChess.csproj", "{BE50E35E-FA22-477E-85DF-8F84356D8CCD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TheShittiestChess", "TheShittiestChess\TheShittiestChess.csproj", "{BE50E35E-FA22-477E-85DF-8F84356D8CCD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EspenErEnTaber", "EspenErEnTaber\EspenErEnTaber.csproj", "{0A71B544-260B-4769-9B38-5102D3C83197}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +37,10 @@ Global
 		{BE50E35E-FA22-477E-85DF-8F84356D8CCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE50E35E-FA22-477E-85DF-8F84356D8CCD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BE50E35E-FA22-477E-85DF-8F84356D8CCD}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{0A71B544-260B-4769-9B38-5102D3C83197}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A71B544-260B-4769-9B38-5102D3C83197}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A71B544-260B-4769-9B38-5102D3C83197}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A71B544-260B-4769-9B38-5102D3C83197}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

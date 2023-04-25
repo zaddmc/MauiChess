@@ -162,7 +162,12 @@ namespace TheShittiestChess
             ChessPiece thePiece = MainPage.piecePostions[passedOn[0]];
             Position newPosition = new Position(passedOn[1][2] - 48, passedOn[1][7] - 48);
 
-            MovePiece(thePiece.position, newPosition);
+            if (passedOn.Length == 4) // casteling moment
+                MovePiece(thePiece.position, new Position(passedOn[1][2] - 48, passedOn[1][7] - 48), new Position(passedOn[2][2] - 48, passedOn[2][7] - 48), new Position(passedOn[3][2] - 48, passedOn[3][7] - 48)); // do this
+            else // the standard route
+                MovePiece(thePiece.position, newPosition);
+            
+            
             ClearRemoveLater();
 
             Debug.WriteLine("The piece Should have moved to a new position");
@@ -187,25 +192,95 @@ namespace TheShittiestChess
             CheckSurroundings(thePiece, new Position(thePiece.position.x - 1, thePiece.position.y - 1));
             CheckSurroundings(thePiece, new Position(thePiece.position.x - 1, thePiece.position.y));
 
-            // castling check
-            int polarrization = 1;
-            if (!thePiece.isWhite)
-                polarrization = -1;
-
-            if (thePiece.isWhite)
+            // long casteling
+            Position castleLong = new(thePiece.position.x - 4, thePiece.position.y);
+            if (MainPage.piecePostions.ContainsKey(castleLong.ToString()) && 
+                !IsPostitionOccupied(new Position(thePiece.position.x - 1, thePiece.position.y)) && 
+                !IsPostitionOccupied(new Position(thePiece.position.x - 2, thePiece.position.y)) && 
+                !IsPostitionOccupied(new Position(thePiece.position.x - 3, thePiece.position.y)))
             {
-                Position castleLeft = new(thePiece.position.x, thePiece.position.y - 3);
-                if (IsPostitionOccupied(castleLeft))
+                if (MainPage.piecePostions[castleLong.ToString()].pieceType == ChessPiece.PieceTypes.rook && 
+                    MainPage.piecePostions[castleLong.ToString()].lastMoveRound == 0)
                 {
-                    if (MainPage.piecePostions[MainPage.PositionToString(castleLeft)].lastMoveRound == 0)
-                    {
-                        MovePiece(castleLeft, new Position(thePiece.position.x, thePiece.position.y - 1));
-                    }
+                    CheckSurroundings(thePiece, new Position(thePiece.position.x - 2, thePiece.position.y), castleLong, new Position(thePiece.position.x - 1, thePiece.position.y));
+                }
+            }
+            // short castling
+            Position castleShort = new(thePiece.position.x + 3, thePiece.position.y);
+            if (MainPage.piecePostions.ContainsKey(castleShort.ToString()) && 
+                !IsPostitionOccupied(new Position(thePiece.position.x + 1, thePiece.position.y)) && 
+                !IsPostitionOccupied(new Position(thePiece.position.x + 2, thePiece.position.y)))
+            {
+                if (MainPage.piecePostions[castleShort.ToString()].pieceType == ChessPiece.PieceTypes.rook && 
+                    MainPage.piecePostions[castleShort.ToString()].lastMoveRound == 0)
+                {
+                    CheckSurroundings(thePiece, new Position(thePiece.position.x + 2, thePiece.position.y), castleShort, new Position(thePiece.position.x + 1, thePiece.position.y));
                 }
             }
 
 
         } // KingMover
+        private static void CheckSurroundings(ChessPiece thePiece, Position newKingPos, Position oldRookPos, Position newRookPos)
+        {
+            string passOn = string.Format(MainPage.PositionToString(thePiece.position) + "|" + MainPage.PositionToString(newKingPos) + "|" + MainPage.PositionToString(oldRookPos) + "|" + MainPage.PositionToString(newRookPos));
+            Button button = new Button
+            {
+                Opacity = 0,
+                ZIndex = 30,
+                ClassId = passOn,
+
+            };
+            Button border = new Button
+            {
+                BorderColor = Colors.Green,
+                BorderWidth = 5,
+                ZIndex = 15,
+            };
+            MainPage.Board.Children.Add(border);
+            Grid.SetColumn(border, newKingPos.x);
+            Grid.SetRow(border, newKingPos.y);
+            removeLater.Add(border);
+
+            MainPage.Board.Children.Add(button);
+            Grid.SetColumn(button, newKingPos.x);
+            Grid.SetRow(button, newKingPos.y);
+            removeLater.Add(button);
+
+            button.Clicked += MovePiece_Clicked;
+
+        } // CheckSurroundings for the king
+        private static void MovePiece(Position oldKingPos, Position newKingPos, Position oldRookPos, Position newRookPos)
+        {
+                var theKing= MainPage.piecePostions[MainPage.PositionToString(oldKingPos)];
+                MainPage.chessPieceche[theKing.index].position = newKingPos;
+
+                var theRook= MainPage.piecePostions[MainPage.PositionToString(oldRookPos)];
+                MainPage.chessPieceche[theRook.index].position = newRookPos;
+
+                // removes the old allocated postion in the dictionary and allocates the new position for the king
+                MainPage.piecePostions.Remove(MainPage.PositionToString(oldKingPos));
+                MainPage.piecePostions.Add(MainPage.PositionToString(newKingPos), MainPage.chessPieceche[theKing.index]);
+
+                // removes the old allocated postion in the dictionary and allocates the new position for the rook
+                MainPage.piecePostions.Remove(MainPage.PositionToString(oldRookPos));
+                MainPage.piecePostions.Add(MainPage.PositionToString(newRookPos), MainPage.chessPieceche[theRook.index]);
+
+                // moves the king
+                Grid.SetColumn(MainPage.imageButtons[theKing.index], newKingPos.x);
+                Grid.SetRow(MainPage.imageButtons[theKing.index], newKingPos.y);
+
+                // moves the rook
+                Grid.SetColumn(MainPage.imageButtons[theRook.index], newRookPos.x);
+                Grid.SetRow(MainPage.imageButtons[theRook.index], newRookPos.y);
+
+                // the round counter goes up
+                MainPage.chessPieceche[theKing.index].lastMoveRound = MainPage.currentRound;
+                MainPage.chessPieceche[theRook.index].lastMoveRound = MainPage.currentRound;
+                MainPage.currentRound++;
+
+                // to change the box
+                MainPage.TurnBox(true);
+        } // MovePiece for the kings casteling
         public static void QueenMover(ChessPiece thePiece)
         {
             List<Position> queenPositions = new List<Position>();
