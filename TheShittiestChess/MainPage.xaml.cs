@@ -1,4 +1,6 @@
-﻿namespace TheShittiestChess
+﻿using System.Diagnostics;
+
+namespace TheShittiestChess
 {
     public partial class MainPage : ContentPage
     {
@@ -6,6 +8,7 @@
         public static Dictionary<string, ChessPiece> piecePostions = new Dictionary<string, ChessPiece>();
         public static ImageButton[] imageButtons = new ImageButton[32];
         public static int currentRound = 0;
+        public static bool isDebugging = false;
         public static Grid Board { get; private set; }
         public static Grid HighLight { get; private set; }
         public static Label ColorBox { get; private set; }
@@ -23,13 +26,6 @@
 
             //TestSomething(Board);
 
-        }
-        public static void TestSomething(Grid board)
-        {
-            for (int i = 0; i < imageButtons.Length / 2; i++)
-            {
-                Grid.SetColumn(imageButtons[i], 4);
-            }
         }
         public static void MakePieces(Grid board)
         {
@@ -61,7 +57,17 @@
 
             Movement.ClearRemoveLater();
 
-            if (chessPieceche[identifier].isWhite == TurnBox(false) || true) // the second part is for debug use only, it should be false in actual gameplay
+            int poloroid = 0;
+            if (!TurnBox(false))
+                poloroid = 16;
+
+            if (!Movement.CanTheKingMove(chessPieceche[poloroid]))
+            {
+                Debug.WriteLine("await me as i am the god, poloroid: {0}", poloroid);
+                Thread.Sleep(1000);
+            }
+
+            if (chessPieceche[identifier].isWhite == TurnBox(false) || isDebugging) // the second part is for debug use only, it should be false in actual gameplay
                 switch (chessPieceche[identifier].pieceType) // this switch checks which piece movement type that is necessary
                 {
                     case ChessPiece.PieceTypes.king:
@@ -85,9 +91,6 @@
                     default:
                         break;
                 }
-
-
-
         }
         public static bool TurnBox(bool isChange)
         {
@@ -219,7 +222,7 @@
             this.x = x;
             this.y = y;
         }
-        public string ToString()
+        public override string ToString()
         {
             return string.Format("x:{0}, y:{1}", x, y);
         }

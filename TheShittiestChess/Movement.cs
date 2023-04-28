@@ -74,6 +74,23 @@ namespace TheShittiestChess
                 }
                 else { color = Colors.Green; ccolor = 'G'; }
 
+                Color backColor;
+                if (positionToCheck.x % 2 == 0)
+                {
+                    if (positionToCheck.y % 2 == 0)
+                        backColor = Colors.AliceBlue;
+                    else
+                        backColor = Colors.Navy;
+                }
+                else
+                {
+                    if (positionToCheck.y % 2 == 1)
+                        backColor = Colors.AliceBlue;
+                    else
+                        backColor = Colors.Navy;
+                }
+
+
                 string passOn = string.Format(MainPage.PositionToString(thePiece.position) + "|" + MainPage.PositionToString(positionToCheck));
                 Button button = new Button
                 {
@@ -87,6 +104,7 @@ namespace TheShittiestChess
                 {
                     BorderColor = color,
                     BorderWidth = 5,
+                    BackgroundColor = backColor,
                     ZIndex = 15,
                 };
                 MainPage.Board.Children.Add(border);
@@ -166,8 +184,8 @@ namespace TheShittiestChess
                 MovePiece(thePiece.position, new Position(passedOn[1][2] - 48, passedOn[1][7] - 48), new Position(passedOn[2][2] - 48, passedOn[2][7] - 48), new Position(passedOn[3][2] - 48, passedOn[3][7] - 48)); // do this
             else // the standard route
                 MovePiece(thePiece.position, newPosition);
-            
-            
+
+
             ClearRemoveLater();
 
             Debug.WriteLine("The piece Should have moved to a new position");
@@ -180,46 +198,197 @@ namespace TheShittiestChess
                 removeLater.RemoveAt(0);
             }
         } // ClearRemoveLater
+        public static List<Position> KingPositions(ChessPiece thePiece)
+        {
+            List<Position> kingPositions = new List<Position>
+            {
+            new Position(thePiece.position.x - 1, thePiece.position.y + 1),
+            new Position(thePiece.position.x, thePiece.position.y + 1),
+            new Position(thePiece.position.x + 1, thePiece.position.y + 1),
+            new Position(thePiece.position.x + 1, thePiece.position.y),
+            new Position(thePiece.position.x + 1, thePiece.position.y - 1),
+            new Position(thePiece.position.x, thePiece.position.y - 1),
+            new Position(thePiece.position.x - 1, thePiece.position.y - 1),
+            new Position(thePiece.position.x - 1, thePiece.position.y),
+            };
+            return kingPositions;
+        }
         public static void KingMover(ChessPiece thePiece)
         {
-            // checking all the postions the king can move to by deafault
-            CheckSurroundings(thePiece, new Position(thePiece.position.x - 1, thePiece.position.y + 1));
-            CheckSurroundings(thePiece, new Position(thePiece.position.x, thePiece.position.y + 1));
-            CheckSurroundings(thePiece, new Position(thePiece.position.x + 1, thePiece.position.y + 1));
-            CheckSurroundings(thePiece, new Position(thePiece.position.x + 1, thePiece.position.y));
-            CheckSurroundings(thePiece, new Position(thePiece.position.x + 1, thePiece.position.y - 1));
-            CheckSurroundings(thePiece, new Position(thePiece.position.x, thePiece.position.y - 1));
-            CheckSurroundings(thePiece, new Position(thePiece.position.x - 1, thePiece.position.y - 1));
-            CheckSurroundings(thePiece, new Position(thePiece.position.x - 1, thePiece.position.y));
 
-            // long casteling
-            Position castleLong = new(thePiece.position.x - 4, thePiece.position.y);
-            if (MainPage.piecePostions.ContainsKey(castleLong.ToString()) && 
-                !IsPostitionOccupied(new Position(thePiece.position.x - 1, thePiece.position.y)) && 
-                !IsPostitionOccupied(new Position(thePiece.position.x - 2, thePiece.position.y)) && 
-                !IsPostitionOccupied(new Position(thePiece.position.x - 3, thePiece.position.y)))
+            if (MainPage.piecePostions[thePiece.position.ToString()].lastMoveRound == 0)
             {
-                if (MainPage.piecePostions[castleLong.ToString()].pieceType == ChessPiece.PieceTypes.rook && 
-                    MainPage.piecePostions[castleLong.ToString()].lastMoveRound == 0)
+                // long casteling
+                Position castleLong = new(thePiece.position.x - 4, thePiece.position.y);
+                if (MainPage.piecePostions.ContainsKey(castleLong.ToString()) &&
+                    !IsPostitionOccupied(new Position(thePiece.position.x - 1, thePiece.position.y)) &&
+                    !IsPostitionOccupied(new Position(thePiece.position.x - 2, thePiece.position.y)) &&
+                    !IsPostitionOccupied(new Position(thePiece.position.x - 3, thePiece.position.y)))
                 {
-                    CheckSurroundings(thePiece, new Position(thePiece.position.x - 2, thePiece.position.y), castleLong, new Position(thePiece.position.x - 1, thePiece.position.y));
+                    if (MainPage.piecePostions[castleLong.ToString()].pieceType == ChessPiece.PieceTypes.rook &&
+                        MainPage.piecePostions[castleLong.ToString()].lastMoveRound == 0)
+                    {
+                        CheckSurroundings(thePiece, new Position(thePiece.position.x - 2, thePiece.position.y), castleLong, new Position(thePiece.position.x - 1, thePiece.position.y));
+                    }
+                }
+                // short castling
+                Position castleShort = new(thePiece.position.x + 3, thePiece.position.y);
+                if (MainPage.piecePostions.ContainsKey(castleShort.ToString()) &&
+                    !IsPostitionOccupied(new Position(thePiece.position.x + 1, thePiece.position.y)) &&
+                    !IsPostitionOccupied(new Position(thePiece.position.x + 2, thePiece.position.y)))
+                {
+                    if (MainPage.piecePostions[castleShort.ToString()].pieceType == ChessPiece.PieceTypes.rook &&
+                        MainPage.piecePostions[castleShort.ToString()].lastMoveRound == 0)
+                    {
+                        CheckSurroundings(thePiece, new Position(thePiece.position.x + 2, thePiece.position.y), castleShort, new Position(thePiece.position.x + 1, thePiece.position.y));
+                    }
                 }
             }
-            // short castling
-            Position castleShort = new(thePiece.position.x + 3, thePiece.position.y);
-            if (MainPage.piecePostions.ContainsKey(castleShort.ToString()) && 
-                !IsPostitionOccupied(new Position(thePiece.position.x + 1, thePiece.position.y)) && 
-                !IsPostitionOccupied(new Position(thePiece.position.x + 2, thePiece.position.y)))
+            List<Position> kingPositions = KingPositions(thePiece);
+            for (int i = 0; i < kingPositions.Count; i++)
             {
-                if (MainPage.piecePostions[castleShort.ToString()].pieceType == ChessPiece.PieceTypes.rook && 
-                    MainPage.piecePostions[castleShort.ToString()].lastMoveRound == 0)
+                if (CheckTheKingStep(thePiece, kingPositions[i]))
                 {
-                    CheckSurroundings(thePiece, new Position(thePiece.position.x + 2, thePiece.position.y), castleShort, new Position(thePiece.position.x + 1, thePiece.position.y));
+                    CheckSurroundings(thePiece, kingPositions[i]);
                 }
             }
-
-
         } // KingMover
+        public static bool CanTheKingMove(ChessPiece thePiece)
+        {
+            List<Position> kingPos = KingPositions(thePiece);
+
+            for (int i = 0; i < kingPos.Count; i++)
+                if (!CheckTheKingStep(thePiece, kingPos[i]))
+                    return false;
+
+            return true;
+        }
+        public static bool CheckTheKingStep(ChessPiece thePiece, Position newPosition)
+        {
+            /// <summary>
+            /// Used to cycle thru kingpostions to check if it is a legal move
+            /// </summary>
+
+            bool[] bools = new bool[8];
+            for (int j = 0; j < bools.Length; j++)
+                bools[j] = true;
+
+            for (int i = 1; i < 8; i++)
+            {
+                //diagnol
+                List<Position> checksDia = new List<Position>();
+                if (bools[0])
+                {
+                    Position temp = new Position(newPosition.x + i, newPosition.y + i);
+                    checksDia.Add(temp);
+                    if (IsPostitionOccupied(temp))
+                        bools[0] = false;
+                }
+                if (bools[1])
+                {
+                    Position temp = new Position(newPosition.x - i, newPosition.y + i);
+                    checksDia.Add(temp);
+                    if (IsPostitionOccupied(temp))
+                        bools[1] = false;
+                }
+                if (bools[2])
+                {
+                    Position temp = new Position(newPosition.x - i, newPosition.y - i);
+                    checksDia.Add(temp);
+                    if (IsPostitionOccupied(temp))
+                        bools[2] = false;
+                }
+                if (bools[3])
+                {
+                    Position temp = new Position(newPosition.x + i, newPosition.y - i);
+                    checksDia.Add(temp);
+                    if (IsPostitionOccupied(temp))
+                        bools[3] = false;
+                }
+                for (int j = 0; j < checksDia.Count; j++)
+                    if (IsPostitionOccupied(checksDia[j]))
+                        if (MainPage.piecePostions[checksDia[j].ToString()].pieceType == ChessPiece.PieceTypes.queen &&
+                            MainPage.piecePostions[checksDia[j].ToString()].isWhite != thePiece.isWhite ||
+                            MainPage.piecePostions[checksDia[j].ToString()].pieceType == ChessPiece.PieceTypes.bishop &&
+                            MainPage.piecePostions[checksDia[j].ToString()].isWhite != thePiece.isWhite)
+                            return false;
+
+                //linear
+                List<Position> checksLin = new List<Position>();
+                if (bools[4])
+                {
+                    Position temp = new Position(newPosition.x + i, newPosition.y);
+                    checksLin.Add(temp);
+                    if (IsPostitionOccupied(temp))
+                        bools[4] = false;
+                }
+                if (bools[5])
+                {
+                    Position temp = new Position(newPosition.x - i, newPosition.y);
+                    checksLin.Add(temp);
+                    if (IsPostitionOccupied(temp))
+                        bools[5] = false;
+                }
+                if (bools[6])
+                {
+                    Position temp = new Position(newPosition.x, newPosition.y + i);
+                    checksLin.Add(temp);
+                    if (IsPostitionOccupied(temp))
+                        bools[6] = false;
+                }
+                if (bools[7])
+                {
+                    Position temp = new Position(newPosition.x, newPosition.y - i);
+                    checksLin.Add(temp);
+                    if (IsPostitionOccupied(temp))
+                        bools[7] = false;
+                }
+                for (int j = 0; j < checksLin.Count; j++)
+                    if (IsPostitionOccupied(checksLin[j]))
+                        if (MainPage.piecePostions[checksLin[j].ToString()].pieceType == ChessPiece.PieceTypes.queen &&
+                            MainPage.piecePostions[checksLin[j].ToString()].isWhite != thePiece.isWhite ||
+                            MainPage.piecePostions[checksLin[j].ToString()].pieceType == ChessPiece.PieceTypes.rook &&
+                            MainPage.piecePostions[checksLin[j].ToString()].isWhite != thePiece.isWhite)
+                            return false;
+            }
+            // knight
+            Position[] knightPositions =
+            {
+                new Position(newPosition.x + 2, newPosition.y + 1),
+                new Position(newPosition.x + 2, newPosition.y - 1),
+                new Position(newPosition.x - 2, newPosition.y + 1),
+                new Position(newPosition.x - 2, newPosition.y - 1),
+                new Position(newPosition.x + 1, newPosition.y + 2),
+                new Position(newPosition.x - 1, newPosition.y + 2),
+                new Position(newPosition.x + 1, newPosition.y - 2),
+                new Position(newPosition.x - 1, newPosition.y - 2),
+            };
+            for (int i = 0; i < knightPositions.Length; i++)
+                if (IsPostitionOccupied(knightPositions[i]))
+                    if (MainPage.piecePostions[knightPositions[i].ToString()].pieceType == ChessPiece.PieceTypes.knight &&
+                        MainPage.piecePostions[knightPositions[i].ToString()].isWhite != thePiece.isWhite)
+                        return false;
+
+            // pawn
+            int polarrization = 1;
+            if (!thePiece.isWhite)
+                polarrization = -1;
+
+            // attack position to the right
+            Position[] pawnPos =
+            {
+                new Position(newPosition.x + 1 * polarrization, newPosition.y + 1 * polarrization),
+                new Position(newPosition.x - 1 * polarrization, newPosition.y + 1 * polarrization),
+            };
+
+            for (int i = 0; i < pawnPos.Length; i++)
+                if (IsPostitionOccupied(pawnPos[i]))
+                    if (MainPage.piecePostions[pawnPos[i].ToString()].pieceType == ChessPiece.PieceTypes.pawn &&
+                        MainPage.piecePostions[pawnPos[i].ToString()].isWhite != thePiece.isWhite)
+                        return false;
+
+            return true;
+        }
         private static void CheckSurroundings(ChessPiece thePiece, Position newKingPos, Position oldRookPos, Position newRookPos)
         {
             string passOn = string.Format(MainPage.PositionToString(thePiece.position) + "|" + MainPage.PositionToString(newKingPos) + "|" + MainPage.PositionToString(oldRookPos) + "|" + MainPage.PositionToString(newRookPos));
@@ -251,35 +420,35 @@ namespace TheShittiestChess
         } // CheckSurroundings for the king
         private static void MovePiece(Position oldKingPos, Position newKingPos, Position oldRookPos, Position newRookPos)
         {
-                var theKing= MainPage.piecePostions[MainPage.PositionToString(oldKingPos)];
-                MainPage.chessPieceche[theKing.index].position = newKingPos;
+            var theKing = MainPage.piecePostions[MainPage.PositionToString(oldKingPos)];
+            MainPage.chessPieceche[theKing.index].position = newKingPos;
 
-                var theRook= MainPage.piecePostions[MainPage.PositionToString(oldRookPos)];
-                MainPage.chessPieceche[theRook.index].position = newRookPos;
+            var theRook = MainPage.piecePostions[MainPage.PositionToString(oldRookPos)];
+            MainPage.chessPieceche[theRook.index].position = newRookPos;
 
-                // removes the old allocated postion in the dictionary and allocates the new position for the king
-                MainPage.piecePostions.Remove(MainPage.PositionToString(oldKingPos));
-                MainPage.piecePostions.Add(MainPage.PositionToString(newKingPos), MainPage.chessPieceche[theKing.index]);
+            // removes the old allocated postion in the dictionary and allocates the new position for the king
+            MainPage.piecePostions.Remove(MainPage.PositionToString(oldKingPos));
+            MainPage.piecePostions.Add(MainPage.PositionToString(newKingPos), MainPage.chessPieceche[theKing.index]);
 
-                // removes the old allocated postion in the dictionary and allocates the new position for the rook
-                MainPage.piecePostions.Remove(MainPage.PositionToString(oldRookPos));
-                MainPage.piecePostions.Add(MainPage.PositionToString(newRookPos), MainPage.chessPieceche[theRook.index]);
+            // removes the old allocated postion in the dictionary and allocates the new position for the rook
+            MainPage.piecePostions.Remove(MainPage.PositionToString(oldRookPos));
+            MainPage.piecePostions.Add(MainPage.PositionToString(newRookPos), MainPage.chessPieceche[theRook.index]);
 
-                // moves the king
-                Grid.SetColumn(MainPage.imageButtons[theKing.index], newKingPos.x);
-                Grid.SetRow(MainPage.imageButtons[theKing.index], newKingPos.y);
+            // moves the king
+            Grid.SetColumn(MainPage.imageButtons[theKing.index], newKingPos.x);
+            Grid.SetRow(MainPage.imageButtons[theKing.index], newKingPos.y);
 
-                // moves the rook
-                Grid.SetColumn(MainPage.imageButtons[theRook.index], newRookPos.x);
-                Grid.SetRow(MainPage.imageButtons[theRook.index], newRookPos.y);
+            // moves the rook
+            Grid.SetColumn(MainPage.imageButtons[theRook.index], newRookPos.x);
+            Grid.SetRow(MainPage.imageButtons[theRook.index], newRookPos.y);
 
-                // the round counter goes up
-                MainPage.chessPieceche[theKing.index].lastMoveRound = MainPage.currentRound;
-                MainPage.chessPieceche[theRook.index].lastMoveRound = MainPage.currentRound;
-                MainPage.currentRound++;
+            // the round counter goes up
+            MainPage.chessPieceche[theKing.index].lastMoveRound = MainPage.currentRound;
+            MainPage.chessPieceche[theRook.index].lastMoveRound = MainPage.currentRound;
+            MainPage.currentRound++;
 
-                // to change the box
-                MainPage.TurnBox(true);
+            // to change the box
+            MainPage.TurnBox(true);
         } // MovePiece for the kings casteling
         public static void QueenMover(ChessPiece thePiece)
         {
@@ -489,7 +658,6 @@ namespace TheShittiestChess
                     if (thePiece.position.y == 6)
                         pawnPostions.Add(tempPos2);
                 }
-
             }
 
             // attack position to the right
@@ -581,6 +749,5 @@ namespace TheShittiestChess
 
             MovePiece(pieceTryingToTake.position, enPassant);
         } // TakePiece
-
     }
 }
