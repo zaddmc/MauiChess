@@ -9,6 +9,7 @@ namespace TheShittiestChess
         public static ImageButton[] imageButtons = new ImageButton[32];
         public static int currentRound = 0;
         public static bool isDebugging = false;
+        public static bool isFlipped = false;
         public static Grid Board { get; private set; }
         public static Grid HighLight { get; private set; }
         public static Label ColorBox { get; private set; }
@@ -23,8 +24,6 @@ namespace TheShittiestChess
             InitPieces();
             MakePieces(Board);
 
-
-            //TestSomething(Board);
 
         }
         public static void MakePieces(Grid board)
@@ -57,40 +56,43 @@ namespace TheShittiestChess
 
             Movement.ClearRemoveLater();
 
-            int poloroid = 0;
-            if (!TurnBox(false))
-                poloroid = 16;
 
-            if (!Movement.CanTheKingMove(chessPieceche[poloroid]))
-            {
-                Debug.WriteLine("await me as i am the god, poloroid: {0}", poloroid);
-                Thread.Sleep(1000);
-            }
 
             if (chessPieceche[identifier].isWhite == TurnBox(false) || isDebugging) // the second part is for debug use only, it should be false in actual gameplay
+            {
+                int poloroid = 0;
+                if (!TurnBox(false))
+                    poloroid = 16;
+                var (legalPositions, boo) = Movement.CanTheKingMove(chessPieceche[poloroid]);
+
+                Debug.WriteLineIf(boo, legalPositions?.Count);
+
+
                 switch (chessPieceche[identifier].pieceType) // this switch checks which piece movement type that is necessary
                 {
                     case ChessPiece.PieceTypes.king:
                         Movement.KingMover(chessPieceche[identifier]);
                         break;
                     case ChessPiece.PieceTypes.queen:
-                        Movement.QueenMover(chessPieceche[identifier]);
+                        Movement.QueenMover(chessPieceche[identifier], legalPositions);
                         break;
                     case ChessPiece.PieceTypes.rook:
-                        Movement.RookMover(chessPieceche[identifier]);
+                        Movement.RookMover(chessPieceche[identifier], legalPositions);
                         break;
                     case ChessPiece.PieceTypes.bishop:
-                        Movement.BishopMover(chessPieceche[identifier]);
+                        Movement.BishopMover(chessPieceche[identifier], legalPositions);
                         break;
                     case ChessPiece.PieceTypes.knight:
-                        Movement.KnightMover(chessPieceche[identifier]);
+                        Movement.KnightMover(chessPieceche[identifier], legalPositions);
                         break;
                     case ChessPiece.PieceTypes.pawn:
-                        Movement.PawnMover(chessPieceche[identifier]);
+                        Movement.PawnMover(chessPieceche[identifier], legalPositions);
                         break;
                     default:
                         break;
                 }
+                legalPositions?.Clear();
+            }
         }
         public static bool TurnBox(bool isChange)
         {
@@ -112,6 +114,49 @@ namespace TheShittiestChess
                 }
 
             return isItWhite;
+        }
+        public static void IsThereCheck(bool isWhiteAsking)
+        {
+            int poloroid = 0;
+            if (isWhiteAsking)
+                poloroid = 16;
+
+            var (legalpos, boo) = Movement.CanTheKingMove(chessPieceche[poloroid]);
+
+            if (legalpos != null)
+            {
+                var legalList = legalpos.ToList();
+                for (int i = legalList.Count - 1; i >= 0; i--)
+                {
+                    var (boohoo, something) = Movement.CheckTheKingCheck(chessPieceche[poloroid], StringToPosition(legalList[i].Key));
+
+                    if (boohoo)
+                    {
+                        legalpos.Remove(legalList[i].Key);
+                    }
+                }
+
+            }
+
+            if (legalpos?.Count == 0 && boo)
+            {
+                if (isWhiteAsking)
+                {
+                    ColorBox.BackgroundColor = Colors.White;
+                    ColorBox.Text = "White Won";
+                    ColorBox.TextColor = Colors.Black;
+                }
+                else
+                {
+                    ColorBox.BackgroundColor = Colors.Black;
+                    ColorBox.Text = "Black Won";
+                    ColorBox.TextColor = Colors.White;
+                }
+            }
+        }
+        public static Position StringToPosition(string idk)
+        {
+            return new Position(idk[2] - 48, idk[7] - 48);
         }
         public static void MakeBoard(Grid board)
         {
@@ -148,33 +193,67 @@ namespace TheShittiestChess
         }
         public static void InitPieces()
         {
-            // pawns for both colors
-            for (int i = 8; i < 8 + 8; i++)
+            if (isFlipped)
             {
-                chessPieceche[i] = new ChessPiece(ChessPiece.PieceTypes.pawn, true, "pawnw.png", true, i, new Position(i - 8, 1));
-                chessPieceche[i + 16] = new ChessPiece(ChessPiece.PieceTypes.pawn, false, "pawnb.png", true, i + 16, new Position(i - 8, 6));
+                // pawns for both colors
+                for (int i = 8; i < 8 + 8; i++)
+                {
+                    chessPieceche[i] = new ChessPiece(ChessPiece.PieceTypes.pawn, true, "pawnw.png", true, i, new Position(i - 8, 1));
+                    chessPieceche[i + 16] = new ChessPiece(ChessPiece.PieceTypes.pawn, false, "pawnb.png", true, i + 16, new Position(i - 8, 6));
+                }
+
+                // white pieces
+                chessPieceche[0] = new ChessPiece(ChessPiece.PieceTypes.king, true, "kingw.png", true, 0, new Position(3, 0));
+                chessPieceche[1] = new ChessPiece(ChessPiece.PieceTypes.queen, true, "queenw.png", true, 1, new Position(4, 0));
+                chessPieceche[2] = new ChessPiece(ChessPiece.PieceTypes.bishop, true, "bishopw.png", true, 2, new Position(2, 0));
+                chessPieceche[3] = new ChessPiece(ChessPiece.PieceTypes.bishop, true, "bishopw.png", true, 3, new Position(5, 0));
+                chessPieceche[4] = new ChessPiece(ChessPiece.PieceTypes.knight, true, "knightw.png", true, 4, new Position(1, 0));
+                chessPieceche[5] = new ChessPiece(ChessPiece.PieceTypes.knight, true, "knightw.png", true, 5, new Position(6, 0));
+                chessPieceche[6] = new ChessPiece(ChessPiece.PieceTypes.rook, true, "rookw.png", true, 6, new Position(0, 0));
+                chessPieceche[7] = new ChessPiece(ChessPiece.PieceTypes.rook, true, "rookw.png", true, 7, new Position(7, 0));
+
+                // black pieces
+                chessPieceche[16] = new ChessPiece(ChessPiece.PieceTypes.king, false, "kingb.png", true, 16, new Position(3, 7));
+                chessPieceche[17] = new ChessPiece(ChessPiece.PieceTypes.queen, false, "queenb.png", true, 17, new Position(4, 7));
+                chessPieceche[18] = new ChessPiece(ChessPiece.PieceTypes.bishop, false, "bishopb.png", true, 18, new Position(2, 7));
+                chessPieceche[19] = new ChessPiece(ChessPiece.PieceTypes.bishop, false, "bishopb.png", true, 19, new Position(5, 7));
+                chessPieceche[20] = new ChessPiece(ChessPiece.PieceTypes.knight, false, "knightb.png", true, 20, new Position(1, 7));
+                chessPieceche[21] = new ChessPiece(ChessPiece.PieceTypes.knight, false, "knightb.png", true, 21, new Position(6, 7));
+                chessPieceche[22] = new ChessPiece(ChessPiece.PieceTypes.rook, false, "rookb.png", true, 22, new Position(0, 7));
+                chessPieceche[23] = new ChessPiece(ChessPiece.PieceTypes.rook, false, "rookb.png", true, 23, new Position(7, 7));
+
             }
+            else
+            {
+                // pawns for both colors
+                for (int i = 8; i < 8 + 8; i++)
+                {
+                    chessPieceche[i] = new ChessPiece(ChessPiece.PieceTypes.pawn, true, "pawnw.png", true, i, new Position(i - 8, 6));
+                    chessPieceche[i + 16] = new ChessPiece(ChessPiece.PieceTypes.pawn, false, "pawnb.png", true, i + 16, new Position(i - 8, 1));
+                }
 
-            // white pieces
-            chessPieceche[0] = new ChessPiece(ChessPiece.PieceTypes.king, true, "kingw.png", true, 0, new Position(4, 0));
-            chessPieceche[1] = new ChessPiece(ChessPiece.PieceTypes.queen, true, "queenw.png", true, 1, new Position(3, 0));
-            chessPieceche[2] = new ChessPiece(ChessPiece.PieceTypes.bishop, true, "bishopw.png", true, 2, new Position(2, 0));
-            chessPieceche[3] = new ChessPiece(ChessPiece.PieceTypes.bishop, true, "bishopw.png", true, 3, new Position(5, 0));
-            chessPieceche[4] = new ChessPiece(ChessPiece.PieceTypes.knight, true, "knightw.png", true, 4, new Position(1, 0));
-            chessPieceche[5] = new ChessPiece(ChessPiece.PieceTypes.knight, true, "knightw.png", true, 5, new Position(6, 0));
-            chessPieceche[6] = new ChessPiece(ChessPiece.PieceTypes.rook, true, "rookw.png", true, 6, new Position(0, 0));
-            chessPieceche[7] = new ChessPiece(ChessPiece.PieceTypes.rook, true, "rookw.png", true, 7, new Position(7, 0));
+                // white pieces
+                chessPieceche[0] = new ChessPiece(ChessPiece.PieceTypes.king, true, "kingw.png", true, 0, new Position(4, 7));
+                chessPieceche[1] = new ChessPiece(ChessPiece.PieceTypes.queen, true, "queenw.png", true, 1, new Position(3, 7));
+                chessPieceche[2] = new ChessPiece(ChessPiece.PieceTypes.bishop, true, "bishopw.png", true, 2, new Position(2, 7));
+                chessPieceche[3] = new ChessPiece(ChessPiece.PieceTypes.bishop, true, "bishopw.png", true, 3, new Position(5, 7));
+                chessPieceche[4] = new ChessPiece(ChessPiece.PieceTypes.knight, true, "knightw.png", true, 4, new Position(1, 7));
+                chessPieceche[5] = new ChessPiece(ChessPiece.PieceTypes.knight, true, "knightw.png", true, 5, new Position(6, 7));
+                chessPieceche[6] = new ChessPiece(ChessPiece.PieceTypes.rook, true, "rookw.png", true, 6, new Position(0, 7));
+                chessPieceche[7] = new ChessPiece(ChessPiece.PieceTypes.rook, true, "rookw.png", true, 7, new Position(7, 7));
 
-            // black pieces
-            chessPieceche[16] = new ChessPiece(ChessPiece.PieceTypes.king, false, "kingb.png", true, 16, new Position(4, 7));
-            chessPieceche[17] = new ChessPiece(ChessPiece.PieceTypes.queen, false, "queenb.png", true, 17, new Position(3, 7));
-            chessPieceche[18] = new ChessPiece(ChessPiece.PieceTypes.bishop, false, "bishopb.png", true, 18, new Position(2, 7));
-            chessPieceche[19] = new ChessPiece(ChessPiece.PieceTypes.bishop, false, "bishopb.png", true, 19, new Position(5, 7));
-            chessPieceche[20] = new ChessPiece(ChessPiece.PieceTypes.knight, false, "knightb.png", true, 20, new Position(1, 7));
-            chessPieceche[21] = new ChessPiece(ChessPiece.PieceTypes.knight, false, "knightb.png", true, 21, new Position(6, 7));
-            chessPieceche[22] = new ChessPiece(ChessPiece.PieceTypes.rook, false, "rookb.png", true, 22, new Position(0, 7));
-            chessPieceche[23] = new ChessPiece(ChessPiece.PieceTypes.rook, false, "rookb.png", true, 23, new Position(7, 7));
+                // black pieces
+                chessPieceche[16] = new ChessPiece(ChessPiece.PieceTypes.king, false, "kingb.png", true, 16, new Position(4, 0));
+                chessPieceche[17] = new ChessPiece(ChessPiece.PieceTypes.queen, false, "queenb.png", true, 17, new Position(3, 0));
+                chessPieceche[18] = new ChessPiece(ChessPiece.PieceTypes.bishop, false, "bishopb.png", true, 18, new Position(2, 0));
+                chessPieceche[19] = new ChessPiece(ChessPiece.PieceTypes.bishop, false, "bishopb.png", true, 19, new Position(5, 0));
+                chessPieceche[20] = new ChessPiece(ChessPiece.PieceTypes.knight, false, "knightb.png", true, 20, new Position(1, 0));
+                chessPieceche[21] = new ChessPiece(ChessPiece.PieceTypes.knight, false, "knightb.png", true, 21, new Position(6, 0));
+                chessPieceche[22] = new ChessPiece(ChessPiece.PieceTypes.rook, false, "rookb.png", true, 22, new Position(0, 0));
+                chessPieceche[23] = new ChessPiece(ChessPiece.PieceTypes.rook, false, "rookb.png", true, 23, new Position(7, 0));
 
+
+            }
             for (int i = 0; i < chessPieceche.Length; i++)
             {
                 piecePostions.Add(PositionToString(chessPieceche[i].position), chessPieceche[i]);

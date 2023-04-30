@@ -55,11 +55,15 @@ namespace TheShittiestChess
 
                 // to change the box
                 MainPage.TurnBox(true);
+
+                // checking if there is a winner
+                MainPage.IsThereCheck(thePiece.isWhite);
             }
             else
             {
                 Debug.WriteLine("the chosen destination is occupied");
             }
+
         } // MovePiece
         private static void CheckSurroundings(ChessPiece thePiece, Position positionToCheck)
         {
@@ -215,59 +219,55 @@ namespace TheShittiestChess
         }
         public static void KingMover(ChessPiece thePiece)
         {
-
+            // castleing
             if (MainPage.piecePostions[thePiece.position.ToString()].lastMoveRound == 0)
             {
-                // long casteling
-                Position castleLong = new(thePiece.position.x - 4, thePiece.position.y);
-                if (MainPage.piecePostions.ContainsKey(castleLong.ToString()) &&
-                    !IsPostitionOccupied(new Position(thePiece.position.x - 1, thePiece.position.y)) &&
-                    !IsPostitionOccupied(new Position(thePiece.position.x - 2, thePiece.position.y)) &&
-                    !IsPostitionOccupied(new Position(thePiece.position.x - 3, thePiece.position.y)))
-                {
-                    if (MainPage.piecePostions[castleLong.ToString()].pieceType == ChessPiece.PieceTypes.rook &&
-                        MainPage.piecePostions[castleLong.ToString()].lastMoveRound == 0)
-                    {
-                        CheckSurroundings(thePiece, new Position(thePiece.position.x - 2, thePiece.position.y), castleLong, new Position(thePiece.position.x - 1, thePiece.position.y));
-                    }
-                }
-                // short castling
-                Position castleShort = new(thePiece.position.x + 3, thePiece.position.y);
-                if (MainPage.piecePostions.ContainsKey(castleShort.ToString()) &&
-                    !IsPostitionOccupied(new Position(thePiece.position.x + 1, thePiece.position.y)) &&
-                    !IsPostitionOccupied(new Position(thePiece.position.x + 2, thePiece.position.y)))
-                {
-                    if (MainPage.piecePostions[castleShort.ToString()].pieceType == ChessPiece.PieceTypes.rook &&
-                        MainPage.piecePostions[castleShort.ToString()].lastMoveRound == 0)
-                    {
-                        CheckSurroundings(thePiece, new Position(thePiece.position.x + 2, thePiece.position.y), castleShort, new Position(thePiece.position.x + 1, thePiece.position.y));
-                    }
-                }
+                Position castleRight = new(7, thePiece.position.y);
+                bool castleRightBoo = true;
+                for (int i = thePiece.position.x + 1; i < 7; i++)
+                    if (IsPostitionOccupied(new Position(i, thePiece.position.y)))
+                        castleRightBoo = false;
+
+                if (MainPage.piecePostions.ContainsKey(castleRight.ToString()) && castleRightBoo &&
+                    MainPage.piecePostions[castleRight.ToString()].pieceType == ChessPiece.PieceTypes.rook &&
+                    MainPage.piecePostions[castleRight.ToString()].lastMoveRound == 0)
+                    CheckSurroundings(thePiece, new Position(thePiece.position.x + 2, thePiece.position.y), castleRight, new Position(thePiece.position.x + 1, thePiece.position.y));
+
+
+                Position castleLeft = new(0, thePiece.position.y);
+                bool castleLeftBoo = true;
+                for (int i = 1; i < thePiece.position.x; i++)
+                    if (IsPostitionOccupied(new Position(i, thePiece.position.y)))
+                        castleLeftBoo = false;
+
+                if (MainPage.piecePostions.ContainsKey(castleLeft.ToString()) && castleLeftBoo &&
+                    MainPage.piecePostions[castleLeft.ToString()].pieceType == ChessPiece.PieceTypes.rook &&
+                    MainPage.piecePostions[castleLeft.ToString()].lastMoveRound == 0)
+                    CheckSurroundings(thePiece, new Position(thePiece.position.x - 2, thePiece.position.y), castleLeft, new Position(thePiece.position.x - 1, thePiece.position.y));
             }
+            
             List<Position> kingPositions = KingPositions(thePiece);
             for (int i = 0; i < kingPositions.Count; i++)
-            {
-                if (CheckTheKingStep(thePiece, kingPositions[i]))
-                {
+                if (CheckTheKingStep(thePiece, kingPositions[i]).boo)
                     CheckSurroundings(thePiece, kingPositions[i]);
-                }
-            }
         } // KingMover
-        public static bool CanTheKingMove(ChessPiece thePiece)
+        public static (Dictionary<string, bool>, bool iDidSomething) CanTheKingMove(ChessPiece thePiece)
         {
-            List<Position> kingPos = KingPositions(thePiece);
+            var (boo, legalIfChecked) = CheckTheKingStep(thePiece, thePiece.position);
+            if (!boo)
+            {
+                return (legalIfChecked, true);
+            }
 
-            for (int i = 0; i < kingPos.Count; i++)
-                if (!CheckTheKingStep(thePiece, kingPos[i]))
-                    return false;
-
-            return true;
-        }
-        public static bool CheckTheKingStep(ChessPiece thePiece, Position newPosition)
+            return (null, false);
+        } // CanTheKingMove
+        public static (bool boo, Dictionary<string, bool> legalIfChecked) CheckTheKingStep(ChessPiece thePiece, Position newPosition)
         {
-            /// <summary>
-            /// Used to cycle thru kingpostions to check if it is a legal move
-            /// </summary>
+            Dictionary<string, bool> legalIfChecked = new Dictionary<string, bool>();
+            List<Position>[] positionStack = new List<Position>[10];
+            for (int i = 0; i < positionStack.Length; i++)
+                positionStack[i] = new List<Position>();
+            bool returnValue = true;
 
             bool[] bools = new bool[8];
             for (int j = 0; j < bools.Length; j++)
@@ -275,119 +275,303 @@ namespace TheShittiestChess
 
             for (int i = 1; i < 8; i++)
             {
-                //diagnol
-                List<Position> checksDia = new List<Position>();
+                //diagnol positions
                 if (bools[0])
                 {
-                    Position temp = new Position(newPosition.x + i, newPosition.y + i);
-                    checksDia.Add(temp);
-                    if (IsPostitionOccupied(temp))
+                    positionStack[0].Add(new Position(newPosition.x + i, newPosition.y + i));
+                    if (IsPostitionOccupied(positionStack[0].Last()))
                         bools[0] = false;
                 }
                 if (bools[1])
                 {
-                    Position temp = new Position(newPosition.x - i, newPosition.y + i);
-                    checksDia.Add(temp);
-                    if (IsPostitionOccupied(temp))
+                    positionStack[1].Add(new Position(newPosition.x - i, newPosition.y + i));
+                    if (IsPostitionOccupied(positionStack[1].Last()))
                         bools[1] = false;
                 }
                 if (bools[2])
                 {
-                    Position temp = new Position(newPosition.x - i, newPosition.y - i);
-                    checksDia.Add(temp);
-                    if (IsPostitionOccupied(temp))
+                    positionStack[2].Add(new Position(newPosition.x - i, newPosition.y - i));
+                    if (IsPostitionOccupied(positionStack[2].Last()))
                         bools[2] = false;
                 }
                 if (bools[3])
                 {
-                    Position temp = new Position(newPosition.x + i, newPosition.y - i);
-                    checksDia.Add(temp);
-                    if (IsPostitionOccupied(temp))
+                    positionStack[3].Add(new Position(newPosition.x + i, newPosition.y - i));
+                    if (IsPostitionOccupied(positionStack[3].Last()))
                         bools[3] = false;
                 }
-                for (int j = 0; j < checksDia.Count; j++)
-                    if (IsPostitionOccupied(checksDia[j]))
-                        if (MainPage.piecePostions[checksDia[j].ToString()].pieceType == ChessPiece.PieceTypes.queen &&
-                            MainPage.piecePostions[checksDia[j].ToString()].isWhite != thePiece.isWhite ||
-                            MainPage.piecePostions[checksDia[j].ToString()].pieceType == ChessPiece.PieceTypes.bishop &&
-                            MainPage.piecePostions[checksDia[j].ToString()].isWhite != thePiece.isWhite)
-                            return false;
 
                 //linear
-                List<Position> checksLin = new List<Position>();
                 if (bools[4])
                 {
-                    Position temp = new Position(newPosition.x + i, newPosition.y);
-                    checksLin.Add(temp);
-                    if (IsPostitionOccupied(temp))
+                    positionStack[4].Add(new Position(newPosition.x + i, newPosition.y));
+                    if (IsPostitionOccupied(positionStack[4].Last()))
                         bools[4] = false;
                 }
                 if (bools[5])
                 {
-                    Position temp = new Position(newPosition.x - i, newPosition.y);
-                    checksLin.Add(temp);
-                    if (IsPostitionOccupied(temp))
+                    positionStack[5].Add(new Position(newPosition.x - i, newPosition.y));
+                    if (IsPostitionOccupied(positionStack[5].Last()))
                         bools[5] = false;
                 }
                 if (bools[6])
                 {
-                    Position temp = new Position(newPosition.x, newPosition.y + i);
-                    checksLin.Add(temp);
-                    if (IsPostitionOccupied(temp))
+                    positionStack[6].Add(new Position(newPosition.x, newPosition.y + i));
+                    if (IsPostitionOccupied(positionStack[6].Last()))
                         bools[6] = false;
                 }
                 if (bools[7])
                 {
-                    Position temp = new Position(newPosition.x, newPosition.y - i);
-                    checksLin.Add(temp);
-                    if (IsPostitionOccupied(temp))
+                    positionStack[7].Add(new Position(newPosition.x, newPosition.y - i));
+                    if (IsPostitionOccupied(positionStack[7].Last()))
                         bools[7] = false;
                 }
-                for (int j = 0; j < checksLin.Count; j++)
-                    if (IsPostitionOccupied(checksLin[j]))
-                        if (MainPage.piecePostions[checksLin[j].ToString()].pieceType == ChessPiece.PieceTypes.queen &&
-                            MainPage.piecePostions[checksLin[j].ToString()].isWhite != thePiece.isWhite ||
-                            MainPage.piecePostions[checksLin[j].ToString()].pieceType == ChessPiece.PieceTypes.rook &&
-                            MainPage.piecePostions[checksLin[j].ToString()].isWhite != thePiece.isWhite)
-                            return false;
             }
             // knight
-            Position[] knightPositions =
-            {
-                new Position(newPosition.x + 2, newPosition.y + 1),
-                new Position(newPosition.x + 2, newPosition.y - 1),
-                new Position(newPosition.x - 2, newPosition.y + 1),
-                new Position(newPosition.x - 2, newPosition.y - 1),
-                new Position(newPosition.x + 1, newPosition.y + 2),
-                new Position(newPosition.x - 1, newPosition.y + 2),
-                new Position(newPosition.x + 1, newPosition.y - 2),
-                new Position(newPosition.x - 1, newPosition.y - 2),
-            };
-            for (int i = 0; i < knightPositions.Length; i++)
-                if (IsPostitionOccupied(knightPositions[i]))
-                    if (MainPage.piecePostions[knightPositions[i].ToString()].pieceType == ChessPiece.PieceTypes.knight &&
-                        MainPage.piecePostions[knightPositions[i].ToString()].isWhite != thePiece.isWhite)
-                        return false;
+            positionStack[8].Add(new Position(newPosition.x + 2, newPosition.y + 1));
+            positionStack[8].Add(new Position(newPosition.x + 2, newPosition.y - 1));
+            positionStack[8].Add(new Position(newPosition.x - 2, newPosition.y + 1));
+            positionStack[8].Add(new Position(newPosition.x - 2, newPosition.y - 1));
+            positionStack[8].Add(new Position(newPosition.x + 1, newPosition.y + 2));
+            positionStack[8].Add(new Position(newPosition.x - 1, newPosition.y + 2));
+            positionStack[8].Add(new Position(newPosition.x + 1, newPosition.y - 2));
+            positionStack[8].Add(new Position(newPosition.x - 1, newPosition.y - 2));
 
             // pawn
             int polarrization = 1;
-            if (!thePiece.isWhite)
-                polarrization = -1;
-
-            // attack position to the right
-            Position[] pawnPos =
+            if (MainPage.isFlipped)
             {
-                new Position(newPosition.x + 1 * polarrization, newPosition.y + 1 * polarrization),
-                new Position(newPosition.x - 1 * polarrization, newPosition.y + 1 * polarrization),
-            };
+                if (!thePiece.isWhite)
+                    polarrization = -1;
+            }
+            else
+            {
+                if (thePiece.isWhite)
+                    polarrization = -1;
+            }
 
-            for (int i = 0; i < pawnPos.Length; i++)
-                if (IsPostitionOccupied(pawnPos[i]))
-                    if (MainPage.piecePostions[pawnPos[i].ToString()].pieceType == ChessPiece.PieceTypes.pawn &&
-                        MainPage.piecePostions[pawnPos[i].ToString()].isWhite != thePiece.isWhite)
-                        return false;
+            positionStack[9].Add(new Position(newPosition.x + 1, newPosition.y + 1 * polarrization));
+            positionStack[9].Add(new Position(newPosition.x - 1, newPosition.y + 1 * polarrization));
 
-            return true;
+            // the unholy checks
+            for (int j = 0; j < positionStack.Length; j++)
+                switch (j)
+                {
+                    case int x when x is >= 0 and <= 3: // diagnol pieces
+                        for (int k = 0; k < positionStack[j].Count; k++)
+                            if (IsPostitionOccupied(positionStack[j][k]))
+                                if (MainPage.piecePostions[positionStack[j][k].ToString()].pieceType == ChessPiece.PieceTypes.queen &&
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].isWhite != thePiece.isWhite ||
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].pieceType == ChessPiece.PieceTypes.bishop &&
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].isWhite != thePiece.isWhite)
+                                {
+                                    for (int l = 0; l < positionStack[j].Count; l++)
+                                        legalIfChecked.Add(positionStack[j][l].ToString(), true);
+
+                                    returnValue = false;
+                                }
+                        break;
+
+                    case int x when x is >= 4 and <= 7: // linear pieces
+                        for (int k = 0; k < positionStack[j].Count; k++)
+                            if (IsPostitionOccupied(positionStack[j][k]))
+                                if (MainPage.piecePostions[positionStack[j][k].ToString()].pieceType == ChessPiece.PieceTypes.queen &&
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].isWhite != thePiece.isWhite ||
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].pieceType == ChessPiece.PieceTypes.rook &&
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].isWhite != thePiece.isWhite)
+                                {
+                                    for (int l = 0; l < positionStack[j].Count; l++)
+                                        legalIfChecked.Add(positionStack[j][l].ToString(), true);
+
+                                    returnValue = false;
+                                }
+                        break;
+
+                    case 8: // knights
+                        for (int i = 0; i < positionStack[j].Count; i++)
+                            if (IsPostitionOccupied(positionStack[j][i]))
+                                if (MainPage.piecePostions[positionStack[j][i].ToString()].pieceType == ChessPiece.PieceTypes.knight &&
+                                    MainPage.piecePostions[positionStack[j][i].ToString()].isWhite != thePiece.isWhite)
+                                {
+                                    legalIfChecked.Add(positionStack[j][i].ToString(), true);
+
+                                    returnValue = false;
+                                }
+                        break;
+
+                    case 9: // pawns
+                        for (int i = 0; i < positionStack[j].Count; i++)
+                            if (IsPostitionOccupied(positionStack[j][i]))
+                                if (MainPage.piecePostions[positionStack[j][i].ToString()].pieceType == ChessPiece.PieceTypes.pawn &&
+                                    MainPage.piecePostions[positionStack[j][i].ToString()].isWhite != thePiece.isWhite)
+                                {
+                                    legalIfChecked.Add(positionStack[j][i].ToString(), true);
+
+                                    returnValue = false;
+                                }
+                        break;
+
+                    default:
+                        Debug.WriteLine("how and why did you fuck this up");
+                        throw new Exception();
+                }
+            return (returnValue, legalIfChecked);
+        }
+        public static (bool boo, Dictionary<string, bool> legalIfChecked) CheckTheKingCheck(ChessPiece thePiece, Position newPosition)
+        {
+            Dictionary<string, bool> legalIfChecked = new Dictionary<string, bool>();
+            List<Position>[] positionStack = new List<Position>[10];
+            for (int i = 0; i < positionStack.Length; i++)
+                positionStack[i] = new List<Position>();
+            bool returnValue = true;
+
+            bool[] bools = new bool[8];
+            for (int j = 0; j < bools.Length; j++)
+                bools[j] = true;
+
+            for (int i = 1; i < 8; i++)
+            {
+                //diagnol positions
+                if (bools[0])
+                {
+                    positionStack[0].Add(new Position(newPosition.x + i, newPosition.y + i));
+                    if (IsPostitionOccupied(positionStack[0].Last()))
+                        bools[0] = false;
+                }
+                if (bools[1])
+                {
+                    positionStack[1].Add(new Position(newPosition.x - i, newPosition.y + i));
+                    if (IsPostitionOccupied(positionStack[1].Last()))
+                        bools[1] = false;
+                }
+                if (bools[2])
+                {
+                    positionStack[2].Add(new Position(newPosition.x - i, newPosition.y - i));
+                    if (IsPostitionOccupied(positionStack[2].Last()))
+                        bools[2] = false;
+                }
+                if (bools[3])
+                {
+                    positionStack[3].Add(new Position(newPosition.x + i, newPosition.y - i));
+                    if (IsPostitionOccupied(positionStack[3].Last()))
+                        bools[3] = false;
+                }
+
+                //linear
+                if (bools[4])
+                {
+                    positionStack[4].Add(new Position(newPosition.x + i, newPosition.y));
+                    if (IsPostitionOccupied(positionStack[4].Last()))
+                        bools[4] = false;
+                }
+                if (bools[5])
+                {
+                    positionStack[5].Add(new Position(newPosition.x - i, newPosition.y));
+                    if (IsPostitionOccupied(positionStack[5].Last()))
+                        bools[5] = false;
+                }
+                if (bools[6])
+                {
+                    positionStack[6].Add(new Position(newPosition.x, newPosition.y + i));
+                    if (IsPostitionOccupied(positionStack[6].Last()))
+                        bools[6] = false;
+                }
+                if (bools[7])
+                {
+                    positionStack[7].Add(new Position(newPosition.x, newPosition.y - i));
+                    if (IsPostitionOccupied(positionStack[7].Last()))
+                        bools[7] = false;
+                }
+            }
+            // knight
+            positionStack[8].Add(new Position(newPosition.x + 2, newPosition.y + 1));
+            positionStack[8].Add(new Position(newPosition.x + 2, newPosition.y - 1));
+            positionStack[8].Add(new Position(newPosition.x - 2, newPosition.y + 1));
+            positionStack[8].Add(new Position(newPosition.x - 2, newPosition.y - 1));
+            positionStack[8].Add(new Position(newPosition.x + 1, newPosition.y + 2));
+            positionStack[8].Add(new Position(newPosition.x - 1, newPosition.y + 2));
+            positionStack[8].Add(new Position(newPosition.x + 1, newPosition.y - 2));
+            positionStack[8].Add(new Position(newPosition.x - 1, newPosition.y - 2));
+
+            // pawn
+            int polarrization = 1;
+            if (MainPage.isFlipped)
+            {
+                if (!thePiece.isWhite)
+                    polarrization = -1;
+            }
+            else
+            {
+                if (thePiece.isWhite)
+                    polarrization = -1;
+            }
+
+            positionStack[9].Add(new Position(newPosition.x + 1, newPosition.y + 1 * polarrization));
+            positionStack[9].Add(new Position(newPosition.x - 1, newPosition.y + 1 * polarrization));
+
+            // the unholy checks
+            for (int j = 0; j < positionStack.Length; j++)
+                switch (j)
+                {
+                    case int x when x is >= 0 and <= 3: // diagnol pieces
+                        for (int k = 0; k < positionStack[j].Count; k++)
+                            if (IsPostitionOccupied(positionStack[j][k]))
+                                if (MainPage.piecePostions[positionStack[j][k].ToString()].pieceType == ChessPiece.PieceTypes.queen &&
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].isWhite == thePiece.isWhite ||
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].pieceType == ChessPiece.PieceTypes.bishop &&
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].isWhite == thePiece.isWhite)
+                                {
+                                    for (int l = 0; l < positionStack[j].Count; l++)
+                                        legalIfChecked.Add(positionStack[j][l].ToString(), true);
+
+                                    returnValue = false;
+                                }
+                        break;
+
+                    case int x when x is >= 4 and <= 7: // linear pieces
+                        for (int k = 0; k < positionStack[j].Count; k++)
+                            if (IsPostitionOccupied(positionStack[j][k]))
+                                if (MainPage.piecePostions[positionStack[j][k].ToString()].pieceType == ChessPiece.PieceTypes.queen &&
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].isWhite == thePiece.isWhite ||
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].pieceType == ChessPiece.PieceTypes.rook &&
+                                    MainPage.piecePostions[positionStack[j][k].ToString()].isWhite == thePiece.isWhite)
+                                {
+                                    for (int l = 0; l < positionStack[j].Count; l++)
+                                        legalIfChecked.Add(positionStack[j][l].ToString(), true);
+
+                                    returnValue = false;
+                                }
+                        break;
+
+                    case 8: // knights
+                        for (int i = 0; i < positionStack[j].Count; i++)
+                            if (IsPostitionOccupied(positionStack[j][i]))
+                                if (MainPage.piecePostions[positionStack[j][i].ToString()].pieceType == ChessPiece.PieceTypes.knight &&
+                                    MainPage.piecePostions[positionStack[j][i].ToString()].isWhite == thePiece.isWhite)
+                                {
+                                    legalIfChecked.Add(positionStack[j][i].ToString(), true);
+
+                                    returnValue = false;
+                                }
+                        break;
+
+                    case 9: // pawns
+                        for (int i = 0; i < positionStack[j].Count; i++)
+                            if (IsPostitionOccupied(positionStack[j][i]))
+                                if (MainPage.piecePostions[positionStack[j][i].ToString()].pieceType == ChessPiece.PieceTypes.pawn &&
+                                    MainPage.piecePostions[positionStack[j][i].ToString()].isWhite == thePiece.isWhite)
+                                {
+                                    legalIfChecked.Add(positionStack[j][i].ToString(), true);
+
+                                    returnValue = false;
+                                }
+                        break;
+
+                    default:
+                        Debug.WriteLine("how and why did you fuck this up");
+                        throw new Exception();
+                }
+            return (returnValue, legalIfChecked);
         }
         private static void CheckSurroundings(ChessPiece thePiece, Position newKingPos, Position oldRookPos, Position newRookPos)
         {
@@ -417,7 +601,7 @@ namespace TheShittiestChess
 
             button.Clicked += MovePiece_Clicked;
 
-        } // CheckSurroundings for the king
+        } // CheckSurroundings for the kings castleing
         private static void MovePiece(Position oldKingPos, Position newKingPos, Position oldRookPos, Position newRookPos)
         {
             var theKing = MainPage.piecePostions[MainPage.PositionToString(oldKingPos)];
@@ -450,8 +634,9 @@ namespace TheShittiestChess
             // to change the box
             MainPage.TurnBox(true);
         } // MovePiece for the kings casteling
-        public static void QueenMover(ChessPiece thePiece)
+        public static void QueenMover(ChessPiece thePiece, Dictionary<string, bool> kingIsChecked)
         {
+
             List<Position> queenPositions = new List<Position>();
             bool[] bools = new bool[8];
             for (int i = 0; i < bools.Length; i++)
@@ -520,13 +705,15 @@ namespace TheShittiestChess
                 }
             }
             for (int i = 0; i < queenPositions.Count; i++)
-            {
-                CheckSurroundings(thePiece, queenPositions[i]);
-            }
-
-
+                if (kingIsChecked != null)
+                    if (kingIsChecked.ContainsKey(queenPositions[i].ToString()))
+                        CheckSurroundings(thePiece, queenPositions[i]);
+                    else
+                        continue;
+                else
+                    CheckSurroundings(thePiece, queenPositions[i]);
         } // QueenMover
-        public static void BishopMover(ChessPiece thePiece)
+        public static void BishopMover(ChessPiece thePiece, Dictionary<string, bool> kingIsChecked)
         {
             List<Position> bishopPositions = new List<Position>();
             bool[] bools = new bool[4];
@@ -565,11 +752,15 @@ namespace TheShittiestChess
                 }
             }
             for (int i = 0; i < bishopPositions.Count; i++)
-            {
-                CheckSurroundings(thePiece, bishopPositions[i]);
-            }
+                if (kingIsChecked != null)
+                    if (kingIsChecked.ContainsKey(bishopPositions[i].ToString()))
+                        CheckSurroundings(thePiece, bishopPositions[i]);
+                    else
+                        continue;
+                else
+                    CheckSurroundings(thePiece, bishopPositions[i]);
         } // BishopMover
-        public static void KnightMover(ChessPiece thePiece)
+        public static void KnightMover(ChessPiece thePiece, Dictionary<string, bool> kingIsChecked)
         {
             Position[] knightPositions =
             {
@@ -583,12 +774,15 @@ namespace TheShittiestChess
                 new Position(thePiece.position.x - 1, thePiece.position.y - 2),
             };
             for (int i = 0; i < knightPositions.Length; i++)
-            {
-                CheckSurroundings(thePiece, knightPositions[i]);
-
-            }
+                if (kingIsChecked != null)
+                    if (kingIsChecked.ContainsKey(knightPositions[i].ToString()))
+                        CheckSurroundings(thePiece, knightPositions[i]);
+                    else
+                        continue;
+                else
+                    CheckSurroundings(thePiece, knightPositions[i]);
         } // KnightMover
-        public static void RookMover(ChessPiece thePiece)
+        public static void RookMover(ChessPiece thePiece, Dictionary<string, bool> kingIsChecked)
         {
             List<Position> rookPositions = new List<Position>();
             bool[] bools = new bool[4];
@@ -627,16 +821,38 @@ namespace TheShittiestChess
                 }
             }
             for (int i = 0; i < rookPositions.Count; i++)
-            {
-                CheckSurroundings(thePiece, rookPositions[i]);
-            }
+                if (kingIsChecked != null)
+                    if (kingIsChecked.ContainsKey(rookPositions[i].ToString()))
+                        CheckSurroundings(thePiece, rookPositions[i]);
+                    else
+                        continue;
+                else
+                    CheckSurroundings(thePiece, rookPositions[i]);
         } // RookMover
-        public static void PawnMover(ChessPiece thePiece)
+        public static void PawnMover(ChessPiece thePiece, Dictionary<string, bool> kingIsChecked)
         {
             List<Position> pawnPostions = new List<Position>();
             int polarrization = 1;
-            if (!thePiece.isWhite)
-                polarrization = -1;
+            int twoJump = 1;
+            int enpassantpos = 4;
+            if (MainPage.isFlipped)
+            {
+                if (!thePiece.isWhite)
+                {
+                    polarrization = -1;
+                    twoJump = 6;
+                    enpassantpos = 3;
+                }
+            }
+            else
+            {
+                if (thePiece.isWhite)
+                {
+                    polarrization = -1;
+                    twoJump = 6;
+                    enpassantpos = 3;
+                }
+            }
 
             // checking the varoius possible postions for pawns
             // checking if the spot straight ahead is takable or not
@@ -650,12 +866,12 @@ namespace TheShittiestChess
             {
                 if (thePiece.isWhite)
                 {
-                    if (thePiece.position.y == 1)
+                    if (thePiece.position.y == twoJump)
                         pawnPostions.Add(tempPos2);
                 }
                 else
                 {
-                    if (thePiece.position.y == 6)
+                    if (thePiece.position.y == twoJump)
                         pawnPostions.Add(tempPos2);
                 }
             }
@@ -671,7 +887,7 @@ namespace TheShittiestChess
                 pawnPostions.Add(tempPos4);
 
             // an attempt at making en passant
-            if (thePiece.isWhite && thePiece.position.y == 4 || !thePiece.isWhite && thePiece.position.y == 3)
+            if (thePiece.position.y == enpassantpos)
             {
                 // en passant check on the right side
                 Position tempEnpassant1 = new Position(thePiece.position.x + 1 * polarrization, thePiece.position.y + 1 * polarrization);
@@ -690,9 +906,13 @@ namespace TheShittiestChess
 
             // checking the possible postions
             for (int i = 0; i < pawnPostions.Count; i++)
-            {
-                CheckSurroundings(thePiece, pawnPostions[i]);
-            }
+                if (kingIsChecked != null)
+                    if (kingIsChecked.ContainsKey(pawnPostions[i].ToString()))
+                        CheckSurroundings(thePiece, pawnPostions[i]);
+                    else
+                        continue;
+                else
+                    CheckSurroundings(thePiece, pawnPostions[i]);
         } // PawnMover
         private static void CheckSurroundings(ChessPiece thePiece, Position positionToCheck, Position enPassant)
         {
