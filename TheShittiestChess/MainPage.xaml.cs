@@ -63,15 +63,16 @@ namespace TheShittiestChess
                 int poloroid = 0;
                 if (!TurnBox(false))
                     poloroid = 16;
+
                 var (legalPositions, boo) = Movement.CanTheKingMove(chessPieceche[poloroid]);
 
-                Debug.WriteLineIf(boo, legalPositions?.Count);
+
 
 
                 switch (chessPieceche[identifier].pieceType) // this switch checks which piece movement type that is necessary
                 {
                     case ChessPiece.PieceTypes.king:
-                        Movement.KingMover(chessPieceche[identifier]);
+                        Movement.KingMover(chessPieceche[identifier], legalPositions);
                         break;
                     case ChessPiece.PieceTypes.queen:
                         Movement.QueenMover(chessPieceche[identifier], legalPositions);
@@ -130,15 +131,20 @@ namespace TheShittiestChess
                 {
                     var (boohoo, something) = Movement.CheckTheKingCheck(chessPieceche[poloroid], StringToPosition(legalList[i].Key));
 
+                    
+                    
                     if (boohoo)
                     {
                         legalpos.Remove(legalList[i].Key);
                     }
+                    
                 }
 
             }
 
-            if (legalpos?.Count == 0 && boo)
+            Debug.WriteLine(legalpos?.Count);
+
+            if (legalpos?.Count == 0 && !boo)
             {
                 if (isWhiteAsking)
                 {
